@@ -1,0 +1,120 @@
+Oauth2 Servers
+
+Vijay Kumar
+Software Engineer
+Orange Business Services
+Email: vijay1.kumar@orange.com 
+
+* Overview
+
+In the traditional client-server authentication model, the client
+requests an access-restricted resource (protected resource) on the 
+server by authenticating with the server using the resource owner's credentials.
+
+- Third party applications needs to store username and password.
+- Servers required to support username and password(inherent security weakness in password model)
+- Cannot micro manage access to third party applications.
+- If user wants to revoke access to third party application(only possible by changing the password). This will result in revoking access of all third party applications.
+- Compromise of third party will result in compromise of third party applications.
+
+
+* Oauth2 framework
+
+Oauth2 addresses these issues by adding an an authorization layer and separating the role of the client from that of the resource owner.
+Client requests an access token 
+
+- Access Token 
+   - scopes
+   - lifetime
+   - access attributes
+
+
+* Roles
+
+Oauth2 defines four rules
+
+- Resource owner
+- Resource server
+- Client server
+- Authorization server
+
+Note - How authorization server and resource server communicates is not defined in oauth document.
+
+* Flow
+
+     +--------+                               +---------------+
+     |        |--(A)- Authorization Request ->|   Resource    |
+     |        |                               |     Owner     |
+     |        |<-(B)-- Authorization Grant ---|               |
+     |        |                               +---------------+
+     |        |
+     |        |                               +---------------+
+     |        |--(C)-- Authorization Grant -->| Authorization |
+     | Client |                               |     Server    |
+     |        |<-(D)----- Access Token -------|               |
+     |        |                               +---------------+
+     |        |
+     |        |                               +---------------+
+     |        |--(E)----- Access Token ------>|    Resource   |
+     |        |                               |     Server    |
+     |        |<-(F)--- Protected Resource ---|               |
+     +--------+                               +---------------+
+
+
+
+* Authorization Grant
+An authorization grant is a credential representing the resource owner's authorization (to access its protected resources) used by the client to obtain an access token.
+
+- Authorization Code
+- Implicit
+- Resource Owner Password Credentials
+- Client Credentials
+
+* Tokens
+- Access token
+- Refresh token
+
+
+  +--------+                                           +---------------+
+  |        |--(A)------- Authorization Grant --------->|               |
+  |        |                                           |               |
+  |        |<-(B)----------- Access Token -------------|               |
+  |        |               & Refresh Token             |               |
+  |        |                                           |               |
+  |        |                            +----------+   |               |
+  |        |--(C)---- Access Token ---->|          |   |               |
+  |        |                            |          |   |               |
+  |        |<-(D)- Protected Resource --| Resource |   | Authorization |
+  | Client |                            |  Server  |   |     Server    |
+  |        |--(E)---- Access Token ---->|          |   |               |
+  |        |                            |          |   |               |
+  |        |<-(F)- Invalid Token Error -|          |   |               |
+  |        |                            +----------+   |               |
+  |        |                                           |               |
+  |        |--(G)----------- Refresh Token ----------->|               |
+  |        |                                           |               |
+  |        |<-(H)----------- Access Token -------------|               |
+  +--------+           & Optional Refresh Token        +---------------+
+
+
+* Client Registration
+Before initiating the protocol, the client registers with the authorization server.
+
+- Client Types
+    A. public (capable of maintaining the confidentiality of their credentials) eg: Web application
+    B. Private eg: Web browser apps and Native apps.
+
+: My notes
+
+- Client Identifier
+- Client Authentication
+- Client Password
+
+* Protocol Endpoints
+
+- Authorization endpoint
+- Token endpoint
+- Redirection endpoint (Used for returning authorization credential)
+
+Note - How Authorization server authenticates the resource owner and how client get Authorization endpoint is not part of the spec.
+
