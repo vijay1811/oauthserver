@@ -15,7 +15,7 @@ server by authenticating with the server using the resource owner's credentials.
 - Servers required to support username and password(inherent security weakness in password model)
 - Cannot micro manage access to third party applications.
 - If user wants to revoke access to third party application(only possible by changing the password). This will result in revoking access of all third party applications.
-- Compromise of third party will result in compromise of third party applications.
+- Compromise of third party will result in compromise of user's account.
 
 
 * Oauth2 framework
@@ -35,7 +35,7 @@ Oauth2 defines four rules
 
 - Resource owner
 - Resource server
-- Client server
+- Client 
 - Authorization server
 
 Note - How authorization server and resource server communicates is not defined in oauth document.
@@ -68,7 +68,10 @@ An authorization grant is a credential representing the resource owner's authori
 - Authorization Code
 - Implicit
 - Resource Owner Password Credentials
-- Client Credentials
+- Client credential
+- Refresh Token
+- Extension
+
 
 * Tokens
 - Access token
@@ -118,3 +121,186 @@ Before initiating the protocol, the client registers with the authorization serv
 
 Note - How Authorization server authenticates the resource owner and how client get Authorization endpoint is not part of the spec.
 
+* Authorization Grant Flow
+
+     +----------+
+     | Resource |
+     |   Owner  |
+     |          |
+     +----------+
+          ^
+          |
+         (B)
+     +----|-----+          Client Identifier      +---------------+
+     |         -+----(A)-- & Redirection URI ---->|               |
+     |  User-   |                                 | Authorization |
+     |  Agent  -+----(B)-- User authenticates --->|     Server    |
+     |          |                                 |               |
+     |         -+----(C)-- Authorization Code ---<|               |
+     +-|----|---+                                 +---------------+
+       |    |                                         ^      v
+      (A)  (C)                                        |      |
+       |    |                                         |      |
+       ^    v                                         |      |
+     +---------+                                      |      |
+     |         |>---(D)-- Authorization Code ---------'      |
+     |  Client |          & Redirection URI                  |
+     |         |                                             |
+     |         |<---(E)----- Access Token -------------------'
+     +---------+       (w/ Optional Refresh Token)
+
+
+* Authorization Grant requests
+
+    GET /auth?response_type=code&amp; client_id=my-client&amp;
+     redirect_uri=http://localhost:3846/callback&amp; scope=fosite&amp;
+     state=12345678901234567890 HTTP/1.1
+    Host: localhost:3846
+    Content-Type: application/x-www-form-urlencoded
+    cache-control: no-cache
+    Postman-Token: ed97bbfe-8d0f-4987-bfc0-61f933d2a887
+
+    http://localhost:3846/callback?code=am8K6QpjZncHmbX7QY_ezbo1iuFK7-uRw24Q7Km8Pl4.
+    54rQ3PrRlg189djIBTN6C1JhFvsagf1UvGgY8HJ_GsY&scope=fosite&state=12345678901234567890
+
+    POST /token HTTP/1.1
+    Host: localhost:3846
+    Content-Type: application/x-www-form-urlencoded
+    cache-control: no-cache
+    Postman-Token: ff6ef69f-7804-4ef5-9649-cf25da722c0e
+    grant_type=authorization_codecode=BXt9alHo0roWlxwr24eUK_9WGMItCj4iScbdMTVJZyI.WH1Yp5F9j1t7GjpHyTIY
+    _m-DW6aIzecvWjcbUOuSxL4scope=fositeclient_id=my-clientclient_secret=foobar
+
+     HTTP/1.1 200 OK
+     Content-Type: application/json;charset=UTF-8
+     Cache-Control: no-store
+    {
+    "access_token": "bNjYRm2dQHmxmJ9nGGBnfZEFKyZYXJlMGm2i5UuTCBU.NFK9yOhpZNiUHwB9CWyIrK5jQlTUKVSTgTAGjv-2Wik",
+    "expires_in": 3599,
+    "scope": "fosite",
+    "token_type": "bearer"
+    }
+
+
+* Implicit Grant Flow
+
+     +----------+
+     | Resource |
+     |  Owner   |
+     |          |
+     +----------+
+          ^
+          |
+         (B)
+     +----|-----+          Client Identifier     +---------------+
+     |         -+----(A)-- & Redirection URI --->|               |
+     |  User-   |                                | Authorization |
+     |  Agent  -|----(B)-- User authenticates -->|     Server    |
+     |          |                                |               |
+     |          |<---(C)--- Redirection URI ----<|               |
+     |          |          with Access Token     +---------------+
+     |          |            in Fragment
+     |          |                                +---------------+
+     |          |----(D)--- Redirection URI ---->|   Web-Hosted  |
+     |          |          without Fragment      |     Client    |
+     |          |                                |    Resource   |
+     |     (F)  |<---(E)------- Script ---------<|               |
+     |          |                                +---------------+
+     +-|--------+
+       |    |
+      (A)  (G) Access Token
+       |    |
+       ^    v
+     +---------+
+     |         |
+     |  Client |
+     |         |
+     +---------+
+
+
+* Implicit Grant requests
+
+    http://localhost:3846/auth?scope=fosite&state=12345678901234567890&response_type=token
+    &client_id=my-client
+
+    http://localhost:3846/callback#access_token=730nOOXGAfz2BN4jNKlfmjLtXSuyz_zmUD3Nv1GOPWc.
+    1-gdpD_boKAoCqnSx65okbiSi1EH8HubpKTFpFhRbZM&expires_in=3600&scope=fosite
+    &state=12345678901234567890&token_type=bearer
+
+
+
+* Resource Owner Password Credential Grant Flow
+
+     +----------+
+     | Resource |
+     |  Owner   |
+     |          |
+     +----------+
+          v
+          |    Resource Owner
+         (A) Password Credentials
+          |
+          v
+     +---------+                                  +---------------+
+     |         |>--(B)---- Resource Owner ------->|               |
+     |         |         Password Credentials     | Authorization |
+     | Client  |                                  |     Server    |
+     |         |<--(C)---- Access Token ---------<|               |
+     |         |    (w/ Optional Refresh Token)   |               |
+     +---------+                                  +---------------+
+
+
+* Resource Owner Password Credential Grant requests
+
+    POST /token HTTP/1.1
+    Host: localhost:3846
+    Content-Type: application/x-www-form-urlencoded
+    cache-control: no-cache
+    Postman-Token: 3d26c3b8-22cb-4eee-b40f-4466b3268907
+    grant_type=passwordusername=peterpassword=secrets
+    copes=fositeclient_id=my-clientclient_secret=foobarundefined=undefined
+
+     HTTP/1.1 200 OK
+     Content-Type: application/json;charset=UTF-8
+     Cache-Control: no-store
+    {
+    "access_token": "qiX5Uvwhn6u7SLuLD5pt7Dl7H81UTvDIqLtCtFnFZgk.67NnHHcgyKr2PYPNK1zWqB524Ba34iL1P93YB5sG40g",
+    "expires_in": 3599,
+    "scope": "",
+    "token_type": "bearer"
+    }
+
+
+* Client Credential Grant
+
+     +---------+                                  +---------------+
+     |         |                                  |               |
+     |         |>--(A)- Client Authentication --->| Authorization |
+     | Client  |                                  |     Server    |
+     |         |<--(B)---- Access Token ---------<|               |
+     |         |                                  |               |
+     +---------+                                  +---------------+
+
+     POST /token HTTP/1.1
+     Host: server.example.com
+     Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+     Content-Type: application/x-www-form-urlencoded
+
+     grant_type=client_credentials
+     HTTP/1.1 200 OK
+     Content-Type: application/json;charset=UTF-8
+     Cache-Control: no-store
+     Pragma: no-cache
+
+     {
+       "access_token":"2YotnFZFEjr1zCsicMWpAA",
+       "token_type":"example",
+       "expires_in":3600,
+       "token_type": "bearer"
+     }
+
+
+* More grant Types
+
+- Extension Grant
+- Refresh Token Grant

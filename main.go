@@ -1,5 +1,5 @@
 package main
-
+ 
 import (
 	"encoding/json"
 
@@ -209,6 +209,7 @@ func main() {
 	f := compose.Compose(new(compose.Config), fositeStore, hmacStrategy, nil,
 		compose.OAuth2ResourceOwnerPasswordCredentialsFactory,
 		compose.OAuth2AuthorizeExplicitFactory,
+		compose.OAuth2AuthorizeImplicitFactory,
 		compose.OAuth2TokenIntrospectionFactory)
 	session := &fosite.DefaultSession{}
 	router := mux.NewRouter()
